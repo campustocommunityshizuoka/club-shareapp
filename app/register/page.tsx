@@ -1,31 +1,59 @@
-// ファイルの先頭に必ず必要（クライアント機能を使うため）
 'use client'
 
 import { registerCircle } from './actions'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, ChangeEvent } from 'react'
+import { useState, ChangeEvent, FormEvent } from 'react'
+import imageCompression from 'browser-image-compression' // 追加
 
 export default function RegisterPage() {
-  // プレビュー画像のURLを保持する状態
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 送信中ローディング用
 
-  // ファイルが選択されたときに実行される関数
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 選択されたファイルからプレビュー用のURLを生成
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-    } else {
-      setPreviewUrl(null);
+    }
+  };
+
+  // 送信ボタンが押されたときの処理
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // 通常の送信を一旦止める
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    const imageFile = formData.get('image') as File;
+
+    try {
+      // --- ここで画像圧縮 ---
+      const options = {
+        maxSizeMB: 0.5, // 最大0.5MB (500KB) まで圧縮
+        maxWidthOrHeight: 1200, // 長辺を1200pxにリサイズ
+        useWebWorker: true,
+      }
+      
+      console.log(`圧縮前: ${imageFile.size / 1024 / 1024} MB`);
+      const compressedFile = await imageCompression(imageFile, options);
+      console.log(`圧縮後: ${compressedFile.size / 1024 / 1024} MB`);
+
+      // 圧縮したファイルをFormDataに上書き
+      formData.set('image', compressedFile);
+
+      // サーバーアクションを実行
+      await registerCircle(formData);
+
+    } catch (error) {
+      console.error(error);
+      alert('エラーが発生しました。もう一度お試しください。');
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-orange-50/30 p-4">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md relative">
-        {/* 一覧に戻るボタンを左上に配置 */}
         <Link href="/" className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 transition">
           ←戻る
         </Link>
@@ -34,16 +62,14 @@ export default function RegisterPage() {
           サークル新規登録
         </h1>
 
-        <form action={registerCircle} className="space-y-6">
+        {/* actionではなくonSubmitを使用 */}
+        <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* アイコン画像（プレビュー機能付き） */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
               アイコン画像 <span className="text-red-500">*</span>
             </label>
-            
             <div className="flex items-center space-x-6">
-              {/* プレビュー表示エリア */}
               <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 bg-gray-100 shadow-sm flex-shrink-0">
                 {previewUrl ? (
                   <Image src={previewUrl} alt="プレビュー" fill className="object-cover" />
@@ -53,21 +79,18 @@ export default function RegisterPage() {
                   </div>
                 )}
               </div>
-
-              {/* ファイル選択ボタン */}
               <input
                 type="file"
                 id="image"
                 name="image"
                 accept="image/*"
                 required
-                onChange={handleImageChange} // 変更時にプレビュー関数を呼ぶ
+                onChange={handleImageChange}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer"
               />
             </div>
           </div>
 
-          {/* サークル名 */}
           <div>
             <label htmlFor="name" className="block text-sm font-bold text-gray-700 mb-1">
               サークル名 <span className="text-red-500">*</span>
@@ -77,12 +100,10 @@ export default function RegisterPage() {
               id="name"
               name="name"
               required
-              placeholder="例: フットサルサークル"
               className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
             />
           </div>
 
-          {/* 活動内容 */}
           <div>
             <label htmlFor="description" className="block text-sm font-bold text-gray-700 mb-1">
               活動内容 <span className="text-red-500">*</span>
@@ -92,17 +113,17 @@ export default function RegisterPage() {
               name="description"
               required
               rows={5}
-              placeholder="活動内容や場所などを記入してください"
               className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition resize-none"
             />
           </div>
 
-          {/* 登録ボタン */}
           <button
             type="submit"
-            className="w-full bg-orange-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-600 transition duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            disabled={isSubmitting} // 送信中はボタンを押せなくする
+            className={`w-full text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md 
+              ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 hover:shadow-lg transform hover:-translate-y-0.5'}`}
           >
-            登録する
+            {isSubmitting ? '圧縮して送信中...' : '登録する'}
           </button>
         </form>
       </div>

@@ -1,9 +1,7 @@
-// app/register/actions.ts
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import sharp from 'sharp' // 追加
 
 export async function registerCircle(formData: FormData) {
   const supabase = await createClient()
@@ -16,34 +14,16 @@ export async function registerCircle(formData: FormData) {
     throw new Error('入力内容が不足しています')
   }
 
-  // --- 画像圧縮処理 Start ---
+  // 日本語ファイル名対策（ランダムな英数字に変換）
+  const fileExt = imageFile.name.split('.').pop()
+  // 圧縮済みでも拡張子が元のままの場合があるので、WebP等の場合はここで調整も可能ですが
+  // 今回はブラウザ側で変換された拡張子をそのまま使う想定にします
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
-  // 1. FileオブジェクトをBufferに変換（sharpで扱うため）
-  const imageBuffer = Buffer.from(await imageFile.arrayBuffer())
-
-  // 2. sharpを使ってリサイズと圧縮を行う
-  // 長辺を最大1200pxにリサイズし、WebP形式で画質80%に圧縮
-  const compressedImageBuffer = await sharp(imageBuffer)
-    .resize(1200, 1200, {
-      fit: 'inside', // アスペクト比を維持して枠内に収める
-      withoutEnlargement: true, // 元画像より大きくしない
-    })
-    .webp({ quality: 80 }) // WebP形式に変換
-    .toBuffer()
-
-  // 3. 保存するファイル名を決定（拡張子は .webp にする）
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.webp`
-
-  // 4. 圧縮済みのデータをSupabase Storageにアップロード
+  // 画像のアップロード（送られてきたものをそのまま保存）
   const { error: uploadError } = await supabase.storage
     .from('circle-icons')
-    .upload(fileName, compressedImageBuffer, {
-      contentType: 'image/webp', // Content-Typeを明示
-      cacheControl: '3600', // キャッシュ設定（任意）
-      upsert: false,
-    })
-  
-  // --- 画像圧縮処理 End ---
+    .upload(fileName, imageFile)
 
   if (uploadError) {
     console.error(uploadError)
