@@ -31,32 +31,37 @@ export default async function Home() {
             </h1>
           </div>
 
-          {/* 右側：登録ボタン */}
-          <Link 
-            href="/register" 
-            className="text-xs sm:text-sm text-gray-500 hover:text-orange-500 transition-colors flex items-center gap-1 font-medium whitespace-nowrap"
-          >
-            <span>＋</span>
-            <span>登録</span>
-          </Link>
+          {/* 右側：ボタンエリア */}
+          <div className="flex items-center gap-5">
+            {/* 管理者ログイン（目立たないように薄いグレーで小さく配置） */}
+            <Link 
+              href="/admin" 
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              管理者
+            </Link>
+
+            {/* 登録ボタン */}
+            <Link 
+              href="/register" 
+              className="text-xs sm:text-sm text-gray-500 hover:text-orange-500 transition-colors flex items-center gap-1 font-medium whitespace-nowrap"
+            >
+              <span>＋</span>
+              <span>登録</span>
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* メインコンテンツ */}
+      {/* メインコンテンツ（変更なし） */}
       <div className="max-w-5xl mx-auto px-4 py-8 sm:py-16">
-        
-        {/* サークルリスト（CSS Gridを使用） */}
-        {/* grid-cols-2 でスマホでも強制2列。md以上で4列 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-8">
           {(circles as Circle[])?.map((circle) => (
             <Link 
               key={circle.id} 
               href={`/circles/${circle.id}`}
-              // even:mt-12 で偶数番目を下げてジグザグにする
               className="group flex flex-col items-center text-center even:mt-12"
             >
-              {/* 丸いアイコン画像 */}
-              {/* スマホでは w-32 (128px) 程度にして2列に収まるサイズに調整 */}
               <div className="relative w-32 h-32 sm:w-44 sm:h-44 mb-3 transition-transform duration-300 group-hover:scale-105 group-hover:shadow-xl rounded-full overflow-hidden border-4 sm:border-[6px] border-white shadow-lg bg-white">
                 {circle.image_path ? (
                   <Image
@@ -71,8 +76,6 @@ export default async function Home() {
                   </div>
                 )}
               </div>
-              
-              {/* サークル名 */}
               <h2 className="text-sm sm:text-lg font-bold text-gray-800 group-hover:text-orange-600 transition-colors px-1 break-words w-full leading-tight">
                 {circle.name}
               </h2>
@@ -80,7 +83,6 @@ export default async function Home() {
           ))}
         </div>
 
-        {/* データが0件の場合 */}
         {circles?.length === 0 && (
           <div className="text-center py-20">
             <p className="text-gray-500 mb-4">まだサークルが登録されていません</p>
