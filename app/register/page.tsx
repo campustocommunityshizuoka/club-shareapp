@@ -117,6 +117,20 @@ export default function RegisterPage() {
             />
           </div>
 
+          <div>
+            <label htmlFor="contactInfo" className="block text-sm font-bold text-gray-700 mb-1">
+              連絡先（メールまたは電話） <span className="text-red-500">*</span>
+           </label>
+           <input
+            type="text"
+            id="contactInfo"
+            name="contactInfo"
+            required
+            placeholder="例: circle@example.com または 090-1234-5678"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+           />
+          </div>
+
           <button
             type="submit"
             disabled={isSubmitting} // 送信中はボタンを押せなくする

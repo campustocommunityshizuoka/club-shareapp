@@ -1,3 +1,4 @@
+// app/register/actions.ts
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
@@ -8,19 +9,20 @@ export async function registerCircle(formData: FormData) {
 
   const name = formData.get('name') as string
   const description = formData.get('description') as string
+  // ↓ ここを追加
+  const contactInfo = formData.get('contactInfo') as string
   const imageFile = formData.get('image') as File
 
-  if (!name || !description || !imageFile) {
+  // 入力チェックに追加
+  if (!name || !description || !contactInfo || !imageFile) {
     throw new Error('入力内容が不足しています')
   }
 
-  // 日本語ファイル名対策（ランダムな英数字に変換）
+  // (中略... ファイル名の生成などはそのまま)
   const fileExt = imageFile.name.split('.').pop()
-  // 圧縮済みでも拡張子が元のままの場合があるので、WebP等の場合はここで調整も可能ですが
-  // 今回はブラウザ側で変換された拡張子をそのまま使う想定にします
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
-  // 画像のアップロード（送られてきたものをそのまま保存）
+  // 画像アップロード (そのまま)
   const { error: uploadError } = await supabase.storage
     .from('circle-icons')
     .upload(fileName, imageFile)
@@ -30,12 +32,13 @@ export async function registerCircle(formData: FormData) {
     throw new Error(`画像のアップロードに失敗しました: ${uploadError.message}`)
   }
 
-  // データベースへの登録
+  // データベースへの登録 (contact_info を追加)
   const { error: dbError } = await supabase
     .from('circles')
     .insert({
       name,
       description,
+      contact_info: contactInfo, // 追加
       image_path: fileName, 
     })
 

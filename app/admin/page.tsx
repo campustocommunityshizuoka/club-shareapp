@@ -31,21 +31,23 @@ export default async function AdminDashboard() {
         </div>
 
         {/* サークル一覧テーブル */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white rounded-lg shadow overflow-hidden overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-4 border-b font-medium text-gray-600">画像</th>
-                <th className="p-4 border-b font-medium text-gray-600">サークル名</th>
+                <th className="p-4 border-b font-medium text-gray-600 w-24">画像</th>
+                <th className="p-4 border-b font-medium text-gray-600 w-1/4">サークル名</th>
                 <th className="p-4 border-b font-medium text-gray-600">説明</th>
-                <th className="p-4 border-b font-medium text-gray-600 text-right">操作</th>
+                {/* ↓ 追加: 連絡先の列ヘッダー */}
+                <th className="p-4 border-b font-medium text-gray-600 w-1/5">連絡先</th>
+                <th className="p-4 border-b font-medium text-gray-600 text-right w-20">操作</th>
               </tr>
             </thead>
             <tbody>
               {(circles as Circle[])?.map((circle) => (
                 <tr key={circle.id} className="hover:bg-gray-50 border-b last:border-0">
-                  <td className="p-4 w-24">
-                    <div className="relative w-16 h-16 bg-gray-200 rounded overflow-hidden">
+                  <td className="p-4 align-top">
+                    <div className="relative w-16 h-16 bg-gray-200 rounded overflow-hidden flex-shrink-0">
                       {circle.image_path && (
                         <Image
                           src={storageUrl + circle.image_path}
@@ -56,19 +58,28 @@ export default async function AdminDashboard() {
                       )}
                     </div>
                   </td>
-                  <td className="p-4 font-bold text-gray-800 w-1/4">{circle.name}</td>
-                  <td className="p-4 text-gray-600 text-sm max-w-md truncate">
-                    {circle.description}
+                  <td className="p-4 font-bold text-gray-800 align-top">
+                    {circle.name}
                   </td>
-                  <td className="p-4 text-right">
-                    {/* 削除ボタン（Server Actionをバインド） */}
+                  <td className="p-4 text-gray-600 text-sm max-w-xs align-top">
+                    <div className="line-clamp-3 whitespace-pre-wrap">
+                      {circle.description}
+                    </div>
+                  </td>
+                  
+                  {/* ↓ 追加: 連絡先のデータ表示 */}
+                  <td className="p-4 text-gray-600 text-sm align-top break-all">
+                    {circle.contact_info || <span className="text-gray-400">-</span>}
+                  </td>
+
+                  <td className="p-4 text-right align-top">
                     <DeleteButton id={circle.id} imagePath={circle.image_path} />
                   </td>
                 </tr>
               ))}
               {circles?.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-gray-500">
+                  <td colSpan={5} className="p-8 text-center text-gray-500">
                     サークルが登録されていません
                   </td>
                 </tr>
@@ -81,18 +92,13 @@ export default async function AdminDashboard() {
   )
 }
 
-// クライアントコンポーネントとして分離せず、formでラップして直接Server Actionを呼ぶ簡易実装
 function DeleteButton({ id, imagePath }: { id: string; imagePath: string | null }) {
-  // bindを使って引数を固定する
   const deleteCircleWithId = deleteCircle.bind(null, id, imagePath)
-
   return (
     <form action={deleteCircleWithId}>
       <button 
         type="submit"
-        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition"
-        // 確認ダイアログを出したい場合はクライアントコンポーネント化が必要ですが
-        // 今回は簡易化のため省略（押すと即消えます）
+        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition whitespace-nowrap"
       >
         削除
       </button>

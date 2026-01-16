@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 :root {
+  /* 重要：ブラウザのネイティブUI（スクロールバーやフォーム部品）をライトモードに固定 */
+  color-scheme: light;
+
+  /* 常に白背景・黒文字にする */
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -12,12 +16,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* 以前ここにあった @media (prefers-color-scheme: dark) { ... } を削除しました。
+   これにより、スマホの設定がダークモードでも色は反転しません。
+*/
 
 body {
   background: var(--background);
